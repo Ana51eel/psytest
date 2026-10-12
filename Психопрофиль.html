@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Психологический профиль — 120 вопросов</title>
+<style>
+:root{color-scheme:light;--ink:#1f2937;--muted:#667085;--line:#d9dee7;--bg:#f4f6fa;--accent:#2858a6}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+main{max-width:850px;margin:auto;padding:20px 14px 60px}.card{background:white;border:1px solid var(--line);border-radius:16px;padding:20px;margin:14px 0;box-shadow:0 3px 12px #17203308}
+h1{font-size:clamp(25px,5vw,36px);line-height:1.15;margin:5px 0 12px}h2{font-size:22px;margin:0 0 10px}h3{font-size:18px;margin:0 0 10px}.muted{color:var(--muted)}.small{font-size:13px}
+input[type=text]{width:100%;padding:13px;border:1px solid #bfc7d4;border-radius:9px;font:inherit;margin-top:6px}
+.progress{height:8px;background:#e7ebf2;border-radius:20px;overflow:hidden;margin:14px 0}.bar{height:100%;width:0;background:var(--accent);transition:width .2s}
+.q{padding:17px 0;border-top:1px solid #edf0f5}.q:first-child{border-top:0}.qtext{font-weight:600;margin-bottom:12px}
+.options{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px}.opt{border:1px solid var(--line);border-radius:10px;padding:9px 4px;text-align:center;cursor:pointer;background:white;font-size:13px}.opt input{display:block;margin:0 auto 6px;accent-color:var(--accent)}.opt:has(input:checked){border-color:var(--accent);background:#edf4ff}
+button{font:inherit;font-weight:650;border:0;border-radius:10px;padding:12px 16px;cursor:pointer;background:var(--accent);color:white}button.secondary{background:#e9edf4;color:var(--ink)}button:disabled{opacity:.4;cursor:not-allowed}.controls{display:flex;gap:10px;justify-content:space-between;flex-wrap:wrap;margin-top:18px}.controls button{flex:1;min-width:130px}
+.pill{display:inline-block;background:#edf4ff;color:#214d8e;padding:4px 9px;border-radius:30px;font-size:13px;margin:3px}
+textarea{width:100%;min-height:190px;resize:vertical;padding:12px;border:1px solid #bfc7d4;border-radius:10px;font:14px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace}
+.resultrow{margin:14px 0}.resulthead{display:flex;justify-content:space-between;gap:12px;font-weight:600}.track{height:9px;background:#edf0f5;border-radius:20px;overflow:hidden;margin-top:6px}.fill{height:100%;background:var(--accent)}
+.notice{background:#fff8e7;border:1px solid #f1dda6;border-radius:10px;padding:12px}
+@media(max-width:480px){.card{padding:15px}.options{gap:4px}.opt{font-size:11px;padding:8px 1px}.controls button{min-width:100px}}
+@media print{body{background:white}.card{box-shadow:none;break-inside:avoid}}
+</style>
+</head>
+<body><main>
+<section class="card">
+ <div class="pill">Самоанализ · 120 вопросов</div>
+ <h1>Психологический профиль личности</h1>
+ <p>Отвечайте о том, как обычно ведёте себя в жизни, а не о том, каким хотелось бы быть. Здесь нет правильных и неправильных ответов.</p>
+ <div class="notice small"><b>Важно:</b> это авторский опросник для самоанализа, а не клинический тест и не научно валидированная диагностика. Результаты описывают тенденции, а не ставят диагноз.</div>
+ <label for="personName"><b>Ваше имя или выбранный псевдоним</b></label>
+ <input id="personName" type="text" maxlength="80" placeholder="Введите имя">
+ <div class="controls"><button id="startTest">Начать тест →</button></div>
+ <p class="muted small">Шкала: 1 — точно да · 2 — скорее да · 3 — зависит от ситуации · 4 — скорее нет · 5 — точно нет.</p>
+ <div class="progress"><div class="bar" id="bar"></div></div>
+ <div id="progressText" class="muted small">Раздел 1 из 14 · отвечено 0 из 120</div>
+</section>
+<div id="quiz"></div>
+<section class="card">
+ <div class="controls">
+  <button class="secondary" id="prev">← Назад</button>
+  <button id="next">Следующий раздел →</button>
+  <button id="finish" hidden>Сформировать результат</button>
+ </div>
+ <p class="muted small">Можно вернуться к предыдущим разделам и изменить ответы. Для результата нужно ответить на все 120 вопросов.</p>
+</section>
+<section class="card" id="result" hidden>
+ <h2>Ваш код ответов</h2>
+ <p>Скопируйте весь текст ниже и отправьте его человеку, который проводит анализ. Код содержит имя и ответы, но не содержит автоматического психологического заключения.</p>
+ <textarea id="output" readonly></textarea>
+ <div class="controls"><button id="copy">Скопировать текст</button><button class="secondary" id="download">Скачать TXT</button></div>
+ <p id="copyStatus" class="muted small" aria-live="polite"></p>
+ <h2 style="margin-top:25px">Предварительная сводка по шкалам</h2>
+ <p class="muted small">Сводка рассчитывается автоматически по ответам. Для полноценной интерпретации отправьте весь код ответов на анализ.</p>
+ <div id="scores"></div>
+</section>
+<footer class="muted small" style="padding:12px 3px">Файл работает локально в браузере и не отправляет ответы на сервер. Если отправляете код другому человеку, вы сами решаете, какие сведения о себе раскрывать.</footer>
+</main>
+<script>
+const sections = [["01", "Холерический компонент", ["Я быстро перехожу к действиям, когда возникает проблема.", "Мне трудно оставаться в стороне, если дело явно движется слишком медленно.", "Когда я уверен в своей позиции, я энергично её отстаиваю.", "Я могу быстро принять решение, даже если часть обстоятельств пока неясна.", "При препятствиях у меня скорее появляется желание пробить путь, чем отступить.", "Мне трудно долго скрывать раздражение, если что-то кажется несправедливым.", "Я люблю брать инициативу в свои руки, когда ситуация требует действий.", "В напряжённой обстановке я обычно становлюсь активнее, а не пассивнее.", "Мне важно видеть быстрый прогресс после того, как я приложил усилия.", "В споре я могу говорить напористо и прямо."]], ["02", "Сангвинический компонент", ["Мне обычно легко начинать разговор с незнакомыми людьми.", "После неудачи я чаще быстро возвращаюсь к обычному настроению.", "Меня легко увлекают новые занятия, идеи и впечатления.", "Я умею поддержать разговор в компании, где почти никого не знаю.", "Разнообразие обычно заряжает меня энергией.", "Я сравнительно легко приспосабливаюсь к новым обстоятельствам.", "Мне нравится делиться хорошими новостями и впечатлениями с другими.", "Я могу переключиться на приятное занятие после неприятного события.", "В компании я часто проявляю живость и эмоциональную выразительность.", "Я обычно не теряюсь, если планы внезапно меняются."]], ["03", "Флегматический компонент", ["Я предпочитаю сначала спокойно разобраться, а затем действовать.", "Даже когда вокруг суета, мне удаётся сохранять относительно ровный темп.", "Я могу долго заниматься одним делом без постоянной смены впечатлений.", "Я редко принимаю важные решения под влиянием минутного порыва.", "Мне комфортнее устойчивый рабочий ритм, чем постоянные авралы.", "Я обычно не показываю сильную реакцию на каждую мелкую неприятность.", "Я предпочитаю заранее понятный порядок действий.", "Мне хватает терпения выполнять монотонные, но необходимые задачи.", "Я могу выслушать эмоционального человека, не отвечая такой же эмоциональностью.", "Я обычно не тороплюсь менять привычный способ работы без веской причины."]], ["04", "Меланхолический компонент", ["Я тонко замечаю изменения в настроении и отношении окружающих ко мне.", "Я могу долго обдумывать неприятный разговор или собственную ошибку.", "Критика иногда задевает меня сильнее, чем это заметно со стороны.", "Перед важным событием я часто представляю, что может пойти не так.", "Я замечаю тонкости и детали, которые другие могут пропускать.", "Мне важно эмоционально осмыслить событие, прежде чем двигаться дальше.", "Я чувствителен к напряжению и недосказанности между людьми.", "Я часто анализирую, какое впечатление произвели мои слова или поступки.", "Небольшие перемены в отношениях могут вызывать у меня заметные переживания.", "Я предпочитаю подготовиться заранее, чтобы снизить вероятность неприятных сюрпризов."]], ["05", "Прагматическое мышление", ["При выборе решения я прежде всего думаю о том, что реально сработает.", "Мне важнее применимый результат, чем теория без практического выхода.", "Если метод не даёт результата, я готов отказаться от него.", "Я оцениваю идеи по пользе, затратам и выполнимости.", "Мне нравится находить самый простой способ решить конкретную задачу."]], ["06", "Аналитическое мышление", ["Я стараюсь разложить сложную проблему на отдельные части.", "Перед выводом мне важно понять причины и связи между событиями.", "Я сравниваю несколько вариантов, прежде чем выбрать один.", "Мне нравится проверять, на каких основаниях строится утверждение.", "Я замечаю логические несоответствия в объяснениях и аргументах."]], ["07", "Скептическое мышление", ["Я не принимаю утверждение только потому, что его уверенно произносят.", "Если информация сомнительна, я стараюсь найти подтверждения.", "Я допускаю, что моя первая версия событий может быть неверной.", "Я задаю уточняющие вопросы, когда объяснение кажется слишком простым.", "Я различаю личное мнение, предположение и подтверждённый факт."]], ["08", "Интуитивное мышление", ["Я иногда чувствую направление развития ситуации ещё до полного объяснения.", "При оценке людей я обращаю внимание на общее впечатление и тонкие сигналы.", "Первое внутреннее ощущение иногда помогает мне наметить решение.", "Я быстро замечаю закономерности, которые трудно сразу сформулировать словами.", "Я умею учитывать впечатление от ситуации наряду с явными фактами."]], ["09", "Стратегическое мышление", ["Я учитываю не только ближайший результат, но и отдалённые последствия.", "Перед важным шагом я стараюсь предвидеть возможные препятствия.", "Я продумываю запасной вариант на случай, если основной план не сработает.", "Я могу отказаться от немедленной выгоды ради более важной долгосрочной цели.", "Я рассматриваю, как сегодняшние решения повлияют на следующие этапы."]], ["10", "Творческое мышление", ["Я часто нахожу необычные способы решения привычных задач.", "Мне интересно соединять идеи из разных областей.", "Если привычный подход не работает, я охотно экспериментирую.", "Я могу предложить несколько разных объяснений одной ситуации.", "Мне нравится придумывать новые варианты, а не ограничиваться первым решением."]], ["11", "Эмоциональная реактивность и восстановление", ["После сильного переживания мне трудно быстро вернуться к обычному состоянию.", "В раздражении мне сложнее тщательно выбирать слова.", "Неопределённость заставляет меня многократно прокручивать возможные исходы.", "При напряжении я иногда воспринимаю происходящее острее, чем в спокойствии.", "Мне бывает трудно перестать думать о проблеме, которую сейчас нельзя решить.", "Моё внутреннее состояние заметно зависит от реакции другого человека.", "После конфликта мне нужно время, чтобы эмоционально прийти в себя.", "Я могу заранее тревожиться о событии, которое ещё не произошло.", "Когда я устаю, мне становится труднее контролировать эмоциональные реакции.", "Мне бывает сложно отделить сам факт события от своих опасений о его значении.", "Негативная обратная связь может надолго испортить мне настроение.", "В сложные периоды мне трудно переключать внимание на другие дела."]], ["12", "Отношения, эмпатия и границы", ["Я стараюсь понять чувства другого человека, даже если не согласен с ним.", "Для меня важно, чтобы слова близкого человека совпадали с поступками.", "Мне трудно прямо отказать близкому человеку, если я боюсь его расстроить.", "Я могу обсуждать неприятные темы, не превращая разговор в борьбу за победу.", "Я умею сохранять собственные интересы, даже когда сильно привязан к человеку.", "Я замечаю, когда поведение человека расходится с его словами.", "Мне важно прямо проговаривать ожидания, а не ждать, что их угадают.", "Я способен признать свою неправоту перед близким человеком.", "Я уважаю право другого человека иметь личное пространство.", "В конфликте я стараюсь понять не только слова, но и потребность за ними.", "Я могу не соглашаться с близким человеком, не обесценивая его.", "Мне удаётся говорить о собственных чувствах без обвинений.", "Я не считаю, что любовь или дружба обязывает соглашаться во всём."]], ["13", "Работа, дисциплина и достижения", ["Я могу продолжать работу, когда первоначальный энтузиазм уже прошёл.", "Мне важно доводить начатое до приемлемого результата.", "Я беру ответственность за результат, а не только за приложенные усилия.", "Я умею организовать работу без постоянного внешнего контроля.", "Я готов учиться на ошибках, даже если нужно признать свою неправоту.", "Я распределяю силы так, чтобы не потратить весь ресурс в начале.", "Я могу выполнять рутинные задачи, если понимаю их необходимость.", "Я умею расставлять приоритеты, когда одновременно много дел.", "Я стараюсь оценивать результат по понятным критериям.", "Если допустил ошибку, я ищу способ исправить её, а не только оправдание.", "Я способен попросить помощь, если это улучшит общий результат.", "Я стараюсь завершать проект, прежде чем бесконечно улучшать детали."]], ["14", "Автономность, риск и самоопределение", ["Я готов принять самостоятельное решение, даже если окружающие не согласны.", "Я способен действовать без полной гарантии успеха.", "Я меняю мнение, если появляются убедительные новые факты.", "Я могу отказаться от привлекательной возможности, если она противоречит моим принципам.", "Я признаю слабые стороны, не считая это доказательством собственной несостоятельности.", "Я предпочитаю сам определять жизненные цели, а не просто следовать ожиданиям.", "Я готов отвечать за последствия собственного выбора.", "Я могу начать новое дело, даже если не знаю заранее всех деталей.", "Мне удаётся отличать собственные желания от ожиданий семьи или окружения.", "Я способен пересматривать планы, если обстоятельства изменились.", "Я готов выходить из привычной зоны комфорта ради значимой цели.", "Я не считаю, что должен доказывать свою правоту любой ценой.", "При выборе пути я учитываю и личные ценности, и реальные ограничения."]]];
+const temperamentNames = ["Холерический компонент","Сангвинический компонент","Флегматический компонент","Меланхолический компонент"];
+const thinkingNames = ["Прагматическое мышление","Аналитическое мышление","Скептическое мышление","Интуитивное мышление","Стратегическое мышление","Творческое мышление"];
+let current=0;
+const answers={};
+const total=sections.reduce((n,s)=>n+s[2].length,0);
+const quiz=document.getElementById('quiz');
+sections.forEach((section,si)=>{
+ const card=document.createElement('section');card.className='card';card.id='section-'+si;card.hidden=si!==0;
+ const h=document.createElement('h2');h.textContent=`Раздел ${section[0]}. ${section[1]}`;card.appendChild(h);
+ const desc=document.createElement('p');desc.className='muted small';desc.textContent=`Вопросов в разделе: ${section[2].length}`;card.appendChild(desc);
+ section[2].forEach((question,qi)=>{
+  const q=document.createElement('div');q.className='q';
+  const t=document.createElement('div');t.className='qtext';t.textContent=`${String(qi+1).padStart(2,'0')}. ${question}`;q.appendChild(t);
+  const opts=document.createElement('div');opts.className='options';
+  const labels=['1 · Точно да','2 · Скорее да','3 · Зависит','4 · Скорее нет','5 · Точно нет'];
+  for(let a=1;a<=5;a++){
+   const lab=document.createElement('label');lab.className='opt';
+   const radio=document.createElement('input');radio.type='radio';radio.name=`q-${si}-${qi}`;radio.value=String(a);
+   radio.addEventListener('change',()=>{answers[`${section[0]}${String(qi+1).padStart(2,'0')}`]=a;updateProgress();});
+   lab.appendChild(radio);lab.appendChild(document.createTextNode(labels[a-1]));opts.appendChild(lab);
+  }
+  q.appendChild(opts);card.appendChild(q);
+ });
+ quiz.appendChild(card);
+});
+function answeredCount(){return Object.keys(answers).length}
+function updateProgress(){
+ const n=answeredCount();document.getElementById('bar').style.width=(n/total*100)+'%';
+ document.getElementById('progressText').textContent=`Раздел ${current+1} из ${sections.length} · отвечено ${n} из ${total}`;
+ document.getElementById('finish').hidden=current!==sections.length-1;
+ document.getElementById('next').hidden=current===sections.length-1;
+}
+function showSection(idx){
+ current=Math.max(0,Math.min(sections.length-1,idx));
+ sections.forEach((_,i)=>document.getElementById('section-'+i).hidden=i!==current);
+ document.getElementById('prev').disabled=current===0;
+ document.getElementById('next').hidden=current===sections.length-1;
+ document.getElementById('finish').hidden=current!==sections.length-1;
+ updateProgress();window.scrollTo({top:0,behavior:'smooth'});
+}
+document.getElementById('startTest').addEventListener('click',()=>{
+ document.getElementById('section-0').scrollIntoView({behavior:'smooth',block:'start'});
+});
+document.getElementById('prev').addEventListener('click',()=>showSection(current-1));
+document.getElementById('next').addEventListener('click',()=>{
+ const missing=sections[current][2].findIndex((_,qi)=>answers[`${sections[current][0]}${String(qi+1).padStart(2,'0')}`]===undefined);
+ if(missing>=0){alert(`Сначала ответьте на все вопросы текущего раздела. Первый пропуск — вопрос ${String(missing+1).padStart(2,'0')}.`);document.querySelector(`#section-${current} .q:nth-of-type(${missing+1})`)?.scrollIntoView({behavior:'smooth',block:'center'});return}
+ showSection(current+1);
+});
+function scaleScore(si){
+ const sec=sections[si];let vals=[];
+ sec[2].forEach((_,qi)=>{const v=answers[`${sec[0]}${String(qi+1).padStart(2,'0')}`];if(v!==undefined) vals.push(6-v)});
+ return vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:0;
+}
+function band(s){return s>=4?'Высокая':s>=3?'Умеренная':'Низкая'}
+function renderScores(){
+ const host=document.getElementById('scores');host.innerHTML='';
+ sections.forEach((s,i)=>{
+  const score=scaleScore(i),row=document.createElement('div');row.className='resultrow';
+  const head=document.createElement('div');head.className='resulthead';
+  const name=document.createElement('span');name.textContent=s[1];
+  const value=document.createElement('span');value.textContent=score.toFixed(2)+' / 5 · '+band(score).toLowerCase();
+  head.append(name,value);row.appendChild(head);
+  const track=document.createElement('div');track.className='track';const fill=document.createElement('div');fill.className='fill';fill.style.width=(score/5*100)+'%';track.appendChild(fill);row.appendChild(track);host.appendChild(row);
+ });
+ const makeLeader=(start,end)=>Array.from({length:end-start},(_,j)=>({name:sections[start+j][1],score:scaleScore(start+j)})).sort((a,b)=>b.score-a.score);
+ const add=document.createElement('p');add.className='small muted';
+ const temp=makeLeader(0,4),think=makeLeader(4,10);
+ add.textContent='Лидирующие компоненты темперамента: '+temp.slice(0,2).map(x=>x.name+' ('+x.score.toFixed(2)+')').join('; ')+'. Ведущие стили мышления: '+think.slice(0,3).map(x=>x.name+' ('+x.score.toFixed(2)+')').join('; ')+'. Рейтинг — сравнительный внутри этого опросника, не нормативная оценка.';
+ host.appendChild(add);
+}
+document.getElementById('finish').addEventListener('click',()=>{
+ const missing=sections.flatMap(s=>s[2].map((_,qi)=>`${s[0]}${String(qi+1).padStart(2,'0')}`)).filter(k=>answers[k]===undefined);
+ if(missing.length){alert(`Остались без ответа ${missing.length} вопросов. Первый пропуск: ${missing[0]}. Перейдите к нужному разделу и заполните его.`);const code=missing[0].slice(0,2);showSection(sections.findIndex(s=>s[0]===code));return}
+ const name=document.getElementById('personName').value.trim()||'Не указано';
+ const lines=[`Имя: ${name}`,'Код ответов (раздел+вопрос=ответ):',...Object.entries(answers).map(([k,v])=>`${k}=${v}`),'','Шкала: 1=точно да; 2=скорее да; 3=зависит от ситуации; 4=скорее нет; 5=точно нет.'];
+ document.getElementById('output').value=lines.join('\n');
+ document.getElementById('result').hidden=false;renderScores();document.getElementById('result').scrollIntoView({behavior:'smooth'});
+});
+document.getElementById('copy').addEventListener('click',async()=>{
+ const ta=document.getElementById('output');ta.select();ta.setSelectionRange(0,ta.value.length);
+ try{await navigator.clipboard.writeText(ta.value);document.getElementById('copyStatus').textContent='Текст скопирован. Теперь вставьте его в сообщение.'}
+ catch(e){document.getElementById('copyStatus').textContent='Если автоматическое копирование не сработало, выделите текст в поле и выберите «Копировать».'}
+});
+document.getElementById('download').addEventListener('click',()=>{
+ const blob=new Blob([document.getElementById('output').value],{type:'text/plain;charset=utf-8'});
+ const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='psihologicheskiy-profil-otvety.txt';a.click();URL.revokeObjectURL(url);
+});
+showSection(0);
+</script></body></html>
